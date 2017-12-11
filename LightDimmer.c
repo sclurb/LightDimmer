@@ -71,32 +71,22 @@ void Bright (void)
             xdiff = xcount;
             upflag = 1;
         }
-        TMR1IF = 0;
-        TMR1H = 0x30;
-        T1CON = 0b00000001;
-        while (TMR1IF == 0);
-        T1CON = 0b00000000;
+        __delay_ms(50);
         xcount++;
         if (UP && (xcount - xdiff) < 5)
         {
             xcount = memory;    // if I try and add a nested if statement in this
         }                       // statement, I get problems.   Stack overflow maybe?
-        if (LedGreen == 1)
-        {
-            LedGreen = 0;
-        }
-        else
-        {
-            LedGreen = 1;
-        }
         if (xcount >= 51)
         {
             xcount = 51;
-            LedRed = 0;
-        }
+            LedGreen = 0;       // Light Green when at full brightness
+            LedRed = 1;            
+        }        
         else
         {
-            LedRed = 1;
+            LedRed = 1;         // else turn both red and gree off
+            LedGreen = 1;
         }
         if (UP)
         {
@@ -115,12 +105,6 @@ void Dim (void)
             xdiff = xcount;
             dwnflag = 1;
         }
-        //TMR1IF = 0;
-        //TMR1H = 0x01;
-        //T1CON = 0b00000001;
-        //while (TMR1IF == 0);
-        //T1CON = 0b00000000;
-        
         __delay_ms(75);
         if (DOWN && (xdiff - xcount) < 7)
         {
@@ -131,21 +115,16 @@ void Dim (void)
         {
             xcount--;
         }
-        if (LedGreen == 1)
-        {
-            LedGreen = 0;
-        }
-        else
-        {
-            LedGreen = 1;
-        }
+
         if (xcount <= 1)
         {
             xcount = 1;
-            LedRed = 0;
+            LedRed = 0;             // light red when at full dim
+            LedGreen = 1;
         }
         else
         {
+            LedGreen = 1;           // otherwise turn both red and green off
             LedRed = 1;
         }
         if (DOWN)
@@ -164,7 +143,7 @@ unsigned char Getdata(unsigned char regdata)
 
 void run (void)
 {
-    data = (unsigned char) xcount  * 0x05;
+    data = (unsigned char) xcount  * 0x05; 
 }
 
 //  high priority interrupt routine
@@ -180,8 +159,8 @@ void interrupt blink_r(void)
     {
         count = 2;                  // sets the count to '2' so that when TMR0
                                     // trips the interrupt flag, it will ignore this if statement
-        if (data <= 10)              // (for anlg operation only)  if data is less than 5, just turn the SCR gate pulse off       
-        {
+        if (data <= 40)              // (for anlg operation only)  if data is less than 40, just turn the SCR gate pulse off       
+        {                           // this has been changed to 40 to test whether LED bulbs are tripping on low A/C levels
             OUT = 1;                // turns off the SCR gate pulse
         }
         else
@@ -276,10 +255,7 @@ void main(void)
             {
                 if ( memflag == 1)
                 {            
-                    LedGreen = 0;
-                    //Tcount++;
                     memory = xcount;
-                    //Tcount = 0;
                 }
             }
         }
